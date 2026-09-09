@@ -49,7 +49,24 @@ if nargin==1
 
     if ~(isfield(par, 'noLeukocyte') && par.noLeukocyte) && ~useFixedCylindricalLeukocyte
         SL = load(par.leukocytePrestressFile);
+        % Bug fix (Sep 9): apply_leukocyte_prestress_parameters unconditionally
+        % overwrites par.EL/nuL/GL/KL with whatever material properties are
+        % baked into the prestress file, silently discarding any explicit
+        % cfg.solid.leukocyte.EL/nuL override set by the caller (confirmed by
+        % out.par.EL == 200 for every case regardless of the requested
+        % override -- e.g. cases (iv)/(vii) both requested EL=2000/20 but ran
+        % with EL=200). Preserve the caller's material-property values (set
+        % just above by softlube_prepare_case.m from cfg) across this call,
+        % which only geometry/mesh sizing fields should come from the
+        % prestress file. No effect on any case that doesn't override
+        % EL/nuL, since those already match the prestress file's own value.
+        preservedEL = par.EL;
+        preservedNuL = par.nuL;
         par = apply_leukocyte_prestress_parameters(par, SL);
+        par.EL = preservedEL;
+        par.nuL = preservedNuL;
+        par.GL = par.EL / (2 * (1 + par.nuL));
+        par.KL = par.EL / (3 * (1 - 2 * par.nuL));
         meshL = SL.meshL;
         interfaceL = SL.interfaceL;
         baseL = SL.baseL;
@@ -344,7 +361,7 @@ while tNow < par.tEnd - timeTol
                 end
                 if isfield(parStep, 'useFeedbackTractionCorrection') && ...
                         parStep.useFeedbackTractionCorrection
-
+                    % Per Maggie's review comment: "the correction should
                     % be chosen to satisfy this criteria with a threshold
                     % of %mismatch... form a real feedback control loop."
                     % Corrects until the worst of the four interface
