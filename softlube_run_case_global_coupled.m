@@ -361,6 +361,18 @@ while tNow < par.tEnd - timeTol
                 end
                 if isfield(parStep, 'useFeedbackTractionCorrection') && ...
                         parStep.useFeedbackTractionCorrection
+                    % KNOWN NON-CONVERGENT, DELIBERATELY UNUSED: confirmed
+                    % (Aug 21) this feedback-based correction does not
+                    % converge for this problem -- worst-case mismatch
+                    % frozen at 47,000-260,000% even with Aitken relaxation
+                    % on. Every production case sets useFeedbackTractionCorrection
+                    % = false and uses the plain-loop branch below instead
+                    % (apply_bodyfitted_MAC_traction_correction.m, which has
+                    % a real, tested convergence fix). This branch and
+                    % apply_bodyfitted_MAC_traction_correction_feedback.m
+                    % are kept only as a documented negative result; do not
+                    % enable without first root-causing the non-convergence.
+                    %
                     % Per Maggie's review comment: "the correction should
                     % be chosen to satisfy this criteria with a threshold
                     % of %mismatch... form a real feedback control loop."

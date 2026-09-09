@@ -1,6 +1,15 @@
 function [state, fluid, ok, stopReason, convergeInfo] = apply_bodyfitted_MAC_traction_correction_feedback( ...
     z, old, state, fluid, meshE, interfaceE, baseE, meshL, interfaceL, baseL, parL, par, opts)
 %APPLY_BODYFITTED_MAC_TRACTION_CORRECTION_FEEDBACK
+% KNOWN NON-CONVERGENT, DELIBERATELY UNUSED (documented negative result):
+% confirmed (Aug 21) this does not converge for this problem -- worst-case
+% interface mismatch frozen at 47,000-260,000% even with Aitken relaxation
+% on. Kept only for reference; the caller (softlube_run_case_global_
+% coupled.m) always runs with useFeedbackTractionCorrection = false and
+% uses apply_bodyfitted_MAC_traction_correction.m instead, which has a
+% real, tested convergence fix. Do not enable this path without first
+% root-causing the non-convergence.
+%
 % Redesign of apply_bodyfitted_MAC_traction_correction.m to be a real
 % feedback control loop,
 %   "The solid fluid coupling should [be] strictly enforced in the ideal
