@@ -49,7 +49,7 @@ if nargin==1
 
     if ~(isfield(par, 'noLeukocyte') && par.noLeukocyte) && ~useFixedCylindricalLeukocyte
         SL = load(par.leukocytePrestressFile);
-        % Bug fix (Sep 9): apply_leukocyte_prestress_parameters unconditionally
+        % Bug fix: apply_leukocyte_prestress_parameters unconditionally
         % overwrites par.EL/nuL/GL/KL with whatever material properties are
         % baked into the prestress file, silently discarding any explicit
         % cfg.solid.leukocyte.EL/nuL override set by the caller (confirmed by
@@ -218,7 +218,7 @@ elseif nargin==2
     RPHist=varargin{1}.RPHist;
     ZPHist=varargin{1}.ZPHist;
 
-    % Root-caused today: this branch never pre-allocated tHist/fluidHist/
+    % Bug fix: this branch never pre-allocated tHist/fluidHist/
     % stateHist/etc, unlike the nargin==1 entry point above (which builds
     % them as explicit historyCapacity-by-1 COLUMN arrays). Left
     % undefined, the first per-step write (e.g. stateHist{tn}=state for
@@ -373,7 +373,7 @@ while tNow < par.tEnd - timeTol
                     % are kept only as a documented negative result; do not
                     % enable without first root-causing the non-convergence.
                     %
-                    % Per Maggie's review comment: "the correction should
+                    % Per Dr. Qi's review comment: "the correction should
                     % be chosen to satisfy this criteria with a threshold
                     % of %mismatch... form a real feedback control loop."
                     % Corrects until the worst of the four interface
@@ -1369,9 +1369,9 @@ end
 function parL = leukocyte_solid_parameters(par)
 parL = par;
 
-% Root-caused Aug 24: par.solidTrustU0/solidTrustUMax (2e-8 m / 2e-7 m)
-% are set once, globally, on par -- tuned (via extensive testing this
-% session) to work well for the ENDOTHELIUM, whose smallest mesh feature
+% Bug fix: par.solidTrustU0/solidTrustUMax (2e-8 m / 2e-7 m)
+% are set once, globally, on par -- tuned via extensive testing
+% to work well for the ENDOTHELIUM, whose smallest mesh feature
 % is order ~3 microns. Reused verbatim for the leukocyte, a 20 nm
 % trust-region step becomes comparable to the leukocyte's OWN geometry
 % once it has compressed significantly during the simulation (its

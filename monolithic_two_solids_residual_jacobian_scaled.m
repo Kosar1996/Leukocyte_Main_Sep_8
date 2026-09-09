@@ -125,8 +125,8 @@ function [RE, RL, RF, JEE, JEL, JEp, JLE, JLL, JLp, JFE, JFL, JFp] = ...
     % Endothelium residual and same-solid tangent.
     % Fluid-on-endothelium traction: normal = +p, tangent = -tauE.
     %
-    % Sign convention independently re-derived and confirmed (Sep 4, per
-    %  review request): traction on a solid from the fluid is
+    % Sign convention independently re-derived and confirmed: traction
+    % on a solid from the fluid is
     % t = T*n, n = the SOLID's own outward normal (pointing INTO the
     % fluid). Endothelium is the OUTER body enclosing the fluid gap, so
     % its outward normal points in the -r direction (n_r=-1). With fluid
@@ -157,8 +157,8 @@ function [RE, RL, RF, JEE, JEL, JEp, JLE, JLL, JLp, JFE, JFL, JFp] = ...
     % Leukocyte residual and same-solid tangent.
     % Fluid-on-leukocyte traction: normal = -p, tangent = +tauL.
     %
-    % Sign convention independently re-derived and confirmed (Sep 4, per
-    %  review request): leukocyte is the INNER body, so its
+    % Sign convention independently re-derived and confirmed: leukocyte
+    % is the INNER body, so its
     % outward normal (into the fluid) points in the +r direction
     % (n_r=+1). t_r = T_rr*n_r = -p*(+1) = -p, t_z = T_rz*n_r = tau*(+1)
     % = +tau. Matches trL.normal=-pLoadL, trL.tangent=+tauL exactly --

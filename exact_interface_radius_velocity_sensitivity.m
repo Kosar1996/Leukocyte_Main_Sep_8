@@ -19,7 +19,7 @@ function [rAtZ, UwAtZ, HrExact, HUExact, UrAtZ] = ...
 % The interface's radial motion enters the fluid problem separately,
 % through the evolving boundary radius rAtZ itself (via the continuity/
 % evolution equation, draft eq. 11) -- NOT through a wall-velocity BC.
-% Per Sep 4 request for a full 3D velocity, UrAtZ (radial
+% For a full 3D velocity, UrAtZ (radial
 % interface velocity, d(r)/dt at fixed zq) is now also returned as an
 % additional, backward-compatible output (existing callers requesting
 % <=4 outputs are unaffected). It is not currently consumed by any
