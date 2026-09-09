@@ -1,4 +1,4 @@
-function [rAtZ, UwAtZ, HrExact, HUExact] = ...
+function [rAtZ, UwAtZ, HrExact, HUExact, UrAtZ] = ...
     exact_interface_radius_velocity_sensitivity(mesh, uNew, uOld, interfaceNodes, zq, dt)
 %EXACT_INTERFACE_RADIUS_VELOCITY_SENSITIVITY
 % Exact deformed-interface mapping and first-order sensitivity.
@@ -11,6 +11,20 @@ function [rAtZ, UwAtZ, HrExact, HUExact] = ...
 % Assumption: the deformed interface remains monotone in z, so the same
 % bracketing segment is valid locally. If the sorted order changes during a
 % finite-difference perturbation, the mapping is only piecewise smooth.
+%
+% UwAtZ is the AXIAL wall velocity only (d(u_z)/dt at fixed zq), matching
+% the axial no-slip/slip boundary condition this model's governing
+% equations actually use (lubrication-theory reduction: only u_z(r)
+% enters the fluid BC, e.g. par draft eq. 8/10 "u_z - 1 = -l*du_z/dr").
+% The interface's radial motion enters the fluid problem separately,
+% through the evolving boundary radius rAtZ itself (via the continuity/
+% evolution equation, draft eq. 11) -- NOT through a wall-velocity BC.
+% Per Sep 4 request for a full 3D velocity, UrAtZ (radial
+% interface velocity, d(r)/dt at fixed zq) is now also returned as an
+% additional, backward-compatible output (existing callers requesting
+% <=4 outputs are unaffected). It is not currently consumed by any
+% boundary condition -- see the accompanying report for why, and flag if
+% a specific new BC should use it.
 
     ids = interfaceNodes(:);
     ndof = 2 * size(mesh.nodes,1);
@@ -19,6 +33,7 @@ function [rAtZ, UwAtZ, HrExact, HUExact] = ...
     zNew  = mesh.nodes(ids,2) + uNew(2*ids);
     uzNew = uNew(2*ids);
 
+    rOld  = mesh.nodes(ids,1) + uOld(2*ids - 1);
     zOld  = mesh.nodes(ids,2) + uOld(2*ids);
     uzOld = uOld(2*ids);
 
@@ -29,6 +44,7 @@ function [rAtZ, UwAtZ, HrExact, HUExact] = ...
 
     [zOldS, idxOld] = sort(zOld);
     uzOldS = uzOld(idxOld);
+    rOldS  = rOld(idxOld);
 
     zq = zq(:);
     nq = numel(zq);
@@ -131,6 +147,15 @@ function [rAtZ, UwAtZ, HrExact, HUExact] = ...
 
     uzOldAtZ = interp_curve_values(zOldS, uzOldS, zq);
     UwAtZ = (uzNewAtZ - uzOldAtZ) / dt;
+
+    if nargout > 4
+        % Radial interface velocity at the same fixed zq query points,
+        % same construction as UwAtZ above: interpolate the OLD state's
+        % radius at zq (using the old deformed curve), subtract from the
+        % already-computed NEW radius (rAtZ), divide by dt.
+        rOldAtZ = interp_curve_values(zOldS, rOldS, zq);
+        UrAtZ = (rAtZ - rOldAtZ) / dt;
+    end
 
     if nargout > 2
         HrExact = sparse(rows, cols, valsR, nq, ndof);
