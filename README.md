@@ -85,6 +85,16 @@ just `out.cfg.solid.leukocyte.EL`) — a previously-fixed bug in
 override. The fix is in place, but this is the kind of thing worth a
 quick sanity check given it failed silently once already.
 
+**Global 2D pressure-traction comparison is currently disabled.** The
+active entry point (`run_input_full2D_pressure2.m`) sets
+`cfg.parOverrides.useGlobal2DPressureTraction = false`, so the `cmp.*`
+comparison fields documented in `softlube_run_case_global_coupled.m`
+(`cmp.note`: "p1D is the reduced coupled pressure; pEGlobal2D and
+pLGlobal2D are the final projected 2D pressures...") are not actually
+being populated for current runs. The comment itself is accurate for
+when that feature is turned on -- it just isn't on right now, so don't
+expect that data to show up in `out` without also flipping this flag.
+
 ## Orphaned output files
 
 This repo currently also contains ~32 old `.mat` output files (e.g.
