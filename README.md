@@ -1,7 +1,6 @@
 # Leukocyte-Endothelium Transendothelial Migration Solver
 
-Axisymmetric MAC finite-volume Stokes fluid solver, coupled to nonlinear
-FEM solid mechanics for a leukocyte and an endothelium, via a monolithic
+Axisymmetric MAC finite-volume Stokes fluid solver, coupled to solid mechanics for a leukocyte and an endothelium, via a monolithic
 Newton solve. Models the thin lubricating fluid film between a leukocyte
 squeezing through an endothelial gap.
 
