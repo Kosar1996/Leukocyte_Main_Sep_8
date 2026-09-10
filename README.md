@@ -1,7 +1,6 @@
 # Leukocyte-Endothelium Transendothelial Migration Solver
 
-Axisymmetric MAC finite-volume Stokes fluid solver, coupled to nonlinear
-FEM solid mechanics for a leukocyte and an endothelium, via a monolithic
+Axisymmetric MAC finite-volume Stokes fluid solver, coupled to solid mechanics for a leukocyte and an endothelium, via a monolithic
 Newton solve. Models the thin lubricating fluid film between a leukocyte
 squeezing through an endothelial gap.
 
@@ -83,7 +82,7 @@ override actually took effect (check `out.par.EL` after the run, not
 just `out.cfg.solid.leukocyte.EL`) — a previously-fixed bug in
 `apply_leukocyte_prestress_parameters` used to silently discard this
 override. The fix is in place, but this is the kind of thing worth a
-quick sanity check given it failed silently once already.
+quick check given it failed silently once already.
 
 ## Orphaned output files
 
