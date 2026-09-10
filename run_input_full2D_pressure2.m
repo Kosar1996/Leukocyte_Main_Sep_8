@@ -305,7 +305,12 @@ end
 
 if plotNative2DPressure
     %plot_final_native2d_pressure(out);
-    plot_select_native2d_pressure(out,nSteps);
+    % Bug fix: plot the actual last accepted step (out.stopStep), not the
+    % originally-requested step count (nSteps) -- these differ whenever a
+    % run stops early (non-convergence, reaching the min-gap floor, etc),
+    % and indexing by nSteps crashes with an out-of-bounds error in that
+    % case even though the run itself completed and saved successfully.
+    plot_select_native2d_pressure(out,out.stopStep);
 end
 
 if plotNative2DStress
