@@ -122,6 +122,7 @@ if nargin==1
     historyCapacity = max(nSteps, 1);
     tHist = nan(historyCapacity,1);
     dtHist = nan(historyCapacity,1);
+    stepWallTimeHist = nan(historyCapacity,1);  % wall-clock seconds per accepted step, including retries
     retryHist = zeros(historyCapacity,1);
     stateHist = cell(historyCapacity,1);
     fluidHist = cell(historyCapacity,1);
@@ -237,6 +238,7 @@ elseif nargin==2
     % branch, so growth stays consistent with how the arrays started.
     tHist = nan(historyCapacity,1);
     dtHist = nan(historyCapacity,1);
+    stepWallTimeHist = nan(historyCapacity,1);  % wall-clock seconds per accepted step, including retries
     retryHist = zeros(historyCapacity,1);
     stateHist = cell(historyCapacity,1);
     fluidHist = cell(historyCapacity,1);
@@ -255,6 +257,7 @@ elseif nargin==2
 end
 while tNow < par.tEnd - timeTol
     old = state;
+    stepTicId = tic;  % wall-clock timer for this accepted step, including any retries
 
     rigidLeukocyte = isfield(par, 'rigidLeukocyte') && par.rigidLeukocyte;
     hasLeukocyte = ~(isfield(par, 'noLeukocyte') && par.noLeukocyte);
@@ -548,6 +551,7 @@ while tNow < par.tEnd - timeTol
         newCapacity = historyCapacity + growBy;
         tHist(newCapacity,1) = nan;
         dtHist(newCapacity,1) = nan;
+        stepWallTimeHist(newCapacity,1) = nan;
         retryHist(newCapacity,1) = 0;
         stateHist{newCapacity,1} = [];
         fluidHist{newCapacity,1} = [];
@@ -653,6 +657,7 @@ while tNow < par.tEnd - timeTol
     fluidHist{tn} = fluidStore;
     tHist(tn) = tNow;
     dtHist(tn) = dtAttempt;
+    stepWallTimeHist(tn) = toc(stepTicId);
     retryHist(tn) = retryCount;
     deltaEHist(:,tn) = state.deltaE;
     deltaLHist(:,tn) = state.deltaL;
@@ -772,6 +777,7 @@ diagHist   = diagHist(1:stopStep);
 tractionCorrectionHistory = tractionCorrectionHistory(1:stopStep);
 tHist      = tHist(1:stopStep);
 dtHist     = dtHist(1:stopStep);
+stepWallTimeHist = stepWallTimeHist(1:stopStep);
 retryHist  = retryHist(1:stopStep);
 adaptiveSummary = summarize_time_step_adaptation( ...
     dtHist, retryHist, par, stoppedEarly, stopReason);
@@ -783,6 +789,7 @@ out = struct();
 out.z = z;
 out.t = tHist;
 out.dtHist = dtHist;
+out.stepWallTimeHist = stepWallTimeHist;  % wall-clock seconds per accepted step (incl. retries)
 out.retryHist = retryHist;
 out.adaptiveSummary = adaptiveSummary;
 out.state = state;              % final state
