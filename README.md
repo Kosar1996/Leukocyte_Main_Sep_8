@@ -80,10 +80,16 @@ leukocyte's Young's modulus (`cfg.solid.leukocyte.EL`) or Poisson ratio
 (`nuL`) away from the prestress file's own baked-in values, verify the
 override actually took effect by checking out.par.EL after the run, not just out.cfg.solid.leukocyte.EL.
 
-## Orphaned output files
+## Data files
 
-This repo currently also contains ~32 old `.mat` output files (e.g.
-`out_3step_fresh_TEMP.mat`) left over from scripts removed in the
-cleanup pass — their generating scripts no longer exist. Not addressed
-in this pass; safe to delete in a future cleanup if disk space or
-clutter becomes a concern.
+Only 5 `.mat` files remain, all genuinely needed:
+
+- `solid_endo_P300_wide.mat`, `solid_leu_P600.mat` — required prestress
+  input data (see "Required input data" above).
+- `prestress_IC.mat` — required input, referenced directly by
+  `ini_solid_endothelium.m` and `run_input.m`.
+- `out_pure2dmac_dtlarge_7steps.mat`, `out_pure2dmac_dtsmall_14steps.mat`
+  — output of the two still-live `run_pure2dmac_*` entry-point variants.
+
+29 orphaned old output `.mat` files (leftovers from already-deleted
+one-off scripts) have been removed.
