@@ -78,11 +78,7 @@ concurrently as separate jobs makes use of extra compute resources.
 **Leukocyte elasticity overrides.** If you need to override the
 leukocyte's Young's modulus (`cfg.solid.leukocyte.EL`) or Poisson ratio
 (`nuL`) away from the prestress file's own baked-in values, verify the
-override actually took effect (check `out.par.EL` after the run, not
-just `out.cfg.solid.leukocyte.EL`) — a previously-fixed bug in
-`apply_leukocyte_prestress_parameters` used to silently discard this
-override. The fix is in place, but this is the kind of thing worth a
-quick check given it failed silently once already.
+override actually took effect by checking out.par.EL after the run, not just out.cfg.solid.leukocyte.EL.
 
 ## Orphaned output files
 
