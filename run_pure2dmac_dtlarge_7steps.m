@@ -314,7 +314,8 @@ if plotNative2DPressure
 end
 
 if plotNative2DStress
-    plot_select_native2d_stress(out,nSteps);
+    % Bug fix: same out.stopStep vs nSteps issue as the pressure plot above.
+    plot_select_native2d_stress(out,out.stopStep);
 end
 
 if plotNative2DVelocity

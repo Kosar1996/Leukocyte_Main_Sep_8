@@ -176,6 +176,32 @@ if nargin==1
         fprintf('Fluid inner boundary for leukocyte fixed at r = RLout = %.6e m.\n', par.RLout);
     end
 
+    % t=0 reference frame (Sep 11): evaluate the fluid field once at the
+    % initial state, before any time-stepping. Passing the same state as
+    % both "old" and "current" gives zero wall velocity (UwE/UwL), so this
+    % is a genuine static snapshot of the initial geometry and any baked-in
+    % prestress, not an artifact of dt. For video generation, so the first
+    % frame shows the starting shape rather than jumping straight to the
+    % first accepted step.
+    t0State = state;
+    t0Fluid = [];
+    try
+        [fluid0, ok0, ~] = solve_selected_poststep_fluid(z, state, state, par);
+        if ok0
+            fluid0.meshF = add_fluid_nodes(fluid0.meshF);
+            [pCell0, sigmaCell0, center0] = recover_fluid_nodes_pressure_stress_Q4( ...
+                fluid0.meshF, fluid0.ur2D, fluid0.uz2D, par.mu, fluid0.pCell);
+            fluid0.pCellNode = pCell0;
+            fluid0.centerNode = center0;
+            fluid0.sigmaCellNode = sigmaCell0;
+            t0Fluid = fluid0;
+        else
+            warning('t=0 reference fluid evaluation failed; out.t0Fluid will be empty.');
+        end
+    catch ME
+        warning('t=0 reference fluid evaluation errored (%s); out.t0Fluid will be empty.', ME.message);
+    end
+
     tn = 0;
     tNow = 0;
     dtNext = par.dt;
@@ -791,6 +817,10 @@ out.t = tHist;
 out.dtHist = dtHist;
 out.stepWallTimeHist = stepWallTimeHist;  % wall-clock seconds per accepted step (incl. retries)
 out.retryHist = retryHist;
+if exist('t0State', 'var')
+    out.t0State = t0State;  % initial state before any time-stepping (nargin==1 entry point only)
+    out.t0Fluid = t0Fluid;  % static fluid field at t=0 (zero wall velocity); empty if evaluation failed
+end
 out.adaptiveSummary = adaptiveSummary;
 out.state = state;              % final state
 out.stateHist = stateHist;      % all time steps
