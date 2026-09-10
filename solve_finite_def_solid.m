@@ -303,7 +303,7 @@ function uNew = solve_finite_def_solid_singlestep(mesh, uOld, traction, interfac
         % fallback (built specifically to rescue exactly this class of
         % near-axis leukocyte failure) never got a chance to run. Confirmed
         % against a real captured run: every logged traction-correction
-        % failure this session carried this exact raw message, with none of
+        % failure carried this exact raw message, with none of
         % the "line search failed"/"stalled" wrapper text that the
         % protected paths produce. Now caught and re-thrown with a distinct
         % message so it reaches the fsolve fallback like every other known
