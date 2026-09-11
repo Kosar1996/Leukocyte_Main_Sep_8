@@ -325,56 +325,73 @@ else
     out = softlube_run_case_global_coupled(cfg);
 end
 
-%% 10. Compact Final Native 2D Fields
-out.native2D = collect_final_native2d(out);
-out.firstStepHybridMesh = collect_hybrid_mesh_at_step( ...
-    out, 1, gap1DWindow, NrExterior2D);
-out.hybridMesh = collect_final_hybrid_mesh(out, gap1DWindow, NrExterior2D);
-
-if plotFirstStepHybridMesh
-    plot_hybrid_mesh_at_step(out, out.firstStepHybridMesh, 1);
-end
-
-if plotNative2DPressure
-    %plot_final_native2d_pressure(out);
-    % Bug fix: plot the actual last accepted step (out.stopStep), not the
-    % originally-requested step count (nSteps) -- these differ whenever a
-    % run stops early (non-convergence, reaching the min-gap floor, etc),
-    % and indexing by nSteps crashes with an out-of-bounds error in that
-    % case even though the run itself completed and saved successfully.
-    plot_select_native2d_pressure(out,out.stopStep);
-end
-
-if plotNative2DStress
-    % Bug fix: same out.stopStep vs nSteps issue as the pressure plot above.
-    plot_select_native2d_stress(out,out.stopStep);
-end
-
-if plotNative2DVelocity
-    plot_final_native2d_velocity(out);
-end
-
-if plotGlobalDomainSchematic
-    out.postPlots.globalDomain = softlube_plot_global1D_domain(cfg, out);
-end
-
-%% 11. Summary
-fprintf('\nHybrid gap-1D / exterior-2D pressure run finished\n');
-fprintf('   stopStep = %d\n', out.stopStep);
-fprintf('   final t  = %.6e s\n', out.t(end));
-
-if isfield(out.native2D, 'P') && any(isfinite(out.native2D.P(:)))
-    fprintf('   native P range = [%.6e, %.6e] Pa\n', ...
-        min(out.native2D.P(:), [], 'omitnan'), ...
-        max(out.native2D.P(:), [], 'omitnan'));
-end
-
-if isfield(out, 'p2DMaxHist') && any(isfinite(out.p2DMaxHist))
-    fprintf('   final max |P2D| = %.6e Pa\n', out.p2DMaxHist(end));
-end
-
-out.cfg=cfg;
+% Save immediately after the solver returns, BEFORE any post-processing or
+% plotting (Sep 11 fix). Two real cluster runs lost all their data -- 9
+% hours and 12 hours of compute -- because a bug downstream of this point
+% (in a plot call, in one case; a wall-time kill, in the other) prevented
+% the save that used to sit at the end of this script from ever running,
+% even though the solve itself had completed/progressed successfully.
+% Saving here means that risk is now structural: nothing after this line
+% can cause data loss, only a missing plot or summary line.
+out.cfg = cfg;
 save('out_customizable_t1.mat','out');
+
+% Post-processing (plots, summary) wrapped in try/catch so a bug here
+% can never take down an otherwise-successful run (e.g. mark a completed
+% Slurm job as FAILED) when the actual simulation data is already safe
+% on disk from the save() above.
+try
+    %% 10. Compact Final Native 2D Fields
+    out.native2D = collect_final_native2d(out);
+    out.firstStepHybridMesh = collect_hybrid_mesh_at_step( ...
+        out, 1, gap1DWindow, NrExterior2D);
+    out.hybridMesh = collect_final_hybrid_mesh(out, gap1DWindow, NrExterior2D);
+
+    if plotFirstStepHybridMesh
+        plot_hybrid_mesh_at_step(out, out.firstStepHybridMesh, 1);
+    end
+
+    if plotNative2DPressure
+        %plot_final_native2d_pressure(out);
+        % Bug fix: plot the actual last accepted step (out.stopStep), not the
+        % originally-requested step count (nSteps) -- these differ whenever a
+        % run stops early (non-convergence, reaching the min-gap floor, etc),
+        % and indexing by nSteps crashes with an out-of-bounds error in that
+        % case even though the run itself completed and saved successfully.
+        plot_select_native2d_pressure(out,out.stopStep);
+    end
+
+    if plotNative2DStress
+        % Bug fix: same out.stopStep vs nSteps issue as the pressure plot above.
+        plot_select_native2d_stress(out,out.stopStep);
+    end
+
+    if plotNative2DVelocity
+        plot_final_native2d_velocity(out);
+    end
+
+    if plotGlobalDomainSchematic
+        out.postPlots.globalDomain = softlube_plot_global1D_domain(cfg, out);
+    end
+
+    %% 11. Summary
+    fprintf('\nHybrid gap-1D / exterior-2D pressure run finished\n');
+    fprintf('   stopStep = %d\n', out.stopStep);
+    fprintf('   final t  = %.6e s\n', out.t(end));
+
+    if isfield(out.native2D, 'P') && any(isfinite(out.native2D.P(:)))
+        fprintf('   native P range = [%.6e, %.6e] Pa\n', ...
+            min(out.native2D.P(:), [], 'omitnan'), ...
+            max(out.native2D.P(:), [], 'omitnan'));
+    end
+
+    if isfield(out, 'p2DMaxHist') && any(isfinite(out.p2DMaxHist))
+        fprintf('   final max |P2D| = %.6e Pa\n', out.p2DMaxHist(end));
+    end
+catch MEpost
+    warning(['Post-processing (plots/summary) failed, but the simulation ' ...
+        'data was already saved above and is not affected: %s'], MEpost.message);
+end
 
 %% Local Plot Helpers
 function native2D = collect_final_native2d(out)

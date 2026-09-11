@@ -210,6 +210,13 @@ function par = softlube_original_default_parameters(par)
     par.global2DPressureTractionNr = 81;
     par.global2DPressureTractionScreenLength = 0.5e-6;
     par.outputFile = 'simulation_output_two_solid_full_analytical_nopre.mat';
+    % Periodic checkpoint save (Sep 11): independent of saveOutput/outputFile
+    % above (which only write once, at the very end, after plotting) -- this
+    % writes a partial 'out' during the run itself, so a wall-time kill or a
+    % post-solve crash (e.g. in a plot call) doesn't lose an otherwise-good
+    % run. Disabled by default (empty checkpointFile); case scripts opt in.
+    par.checkpointFile = '';
+    par.checkpointEvery = 10;
 
     par.twoSolidInterfaceOnlyTest = false;
     par.useTwoSolidSemiAnalyticalJacobian = true;
@@ -353,7 +360,8 @@ function par = softlube_apply_case_fields(par, cfg)
              'outputFile', 'storeFull2DFluidHist', 'store2DFluidArrays', ...
              'store2DPhysicalGridHist', 'store2DSpeedHist', ...
              'plotFinalGlobalPressureContour', ...
-             'plotGlobal2DPressureTractionComparison'});
+             'plotGlobal2DPressureTractionComparison', ...
+             'checkpointFile', 'checkpointEvery'});
     end
 end
 

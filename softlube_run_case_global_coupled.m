@@ -749,6 +749,68 @@ while tNow < par.tEnd - timeTol
     diag.retries = retryCount;
     diagHist{tn} = diag;
 
+    % Periodic checkpoint (Sep 11): saves a partial 'out' during the run
+    % itself, independent of the normal end-of-run save. Without this, a
+    % run that hits the wall-time limit or crashes in post-solve plotting
+    % loses everything, even if hundreds of good steps were completed --
+    % this happened to two full cluster runs (12h and 9h) before this fix.
+    % Wrapped in try/catch: a checkpoint failure (e.g. disk full) must
+    % never abort the simulation itself.
+    if isfield(par, 'checkpointFile') && ~isempty(par.checkpointFile) && ...
+            isfield(par, 'checkpointEvery') && par.checkpointEvery > 0 && ...
+            mod(tn, par.checkpointEvery) == 0
+        try
+            out = struct();
+            out.z = z;
+            out.t = tHist(1:tn);
+            out.dtHist = dtHist(1:tn);
+            out.stepWallTimeHist = stepWallTimeHist(1:tn);
+            out.retryHist = retryHist(1:tn);
+            if exist('t0State', 'var')
+                out.t0State = t0State;
+                out.t0Fluid = t0Fluid;
+            end
+            out.state = state;
+            out.stateHist = stateHist(1:tn);
+            out.fluidHist = fluidHist(1:tn);
+            out.deltaEHist = deltaEHist(:,1:tn);
+            out.deltaLHist = deltaLHist(:,1:tn);
+            out.pHist = pHist(:,1:tn);
+            out.tauEHist = tauEHist(:,1:tn);
+            out.tauLHist = tauLHist(:,1:tn);
+            out.uzEHist = uzEHist(:,1:tn);
+            out.uzLHist = uzLHist(:,1:tn);
+            out.PHist = PHist(:,:,1:tn);
+            out.urCHist = urCHist(:,:,1:tn);
+            out.uzCHist = uzCHist(:,:,1:tn);
+            out.speedCHist = speedCHist(:,:,1:tn);
+            out.RPHist = RPHist(:,:,1:tn);
+            out.ZPHist = ZPHist(:,:,1:tn);
+            out.p2DMaxHist = p2DMaxHist(1:tn);
+            out.trEHist = trEHist(:,:,1:tn);
+            out.trLHist = trLHist(:,:,1:tn);
+            out.diagHist = diagHist(1:tn);
+            out.tractionCorrectionHistory = tractionCorrectionHistory(1:tn);
+            out.par = par;
+            out.meshE = meshE;
+            out.interfaceE = interfaceE;
+            if exist('meshL','var') && ~isempty(meshL)
+                out.meshL = meshL;
+            end
+            if exist('interfaceL','var') && ~isempty(interfaceL)
+                out.interfaceL = interfaceL;
+            end
+            out.stoppedEarly = false;
+            out.stopStep = tn;
+            out.stopReason = '';
+            out.isCheckpoint = true;  % marks this as a partial, in-progress save
+            save(par.checkpointFile, 'out', '-v7.3');
+            clear out;
+        catch MEcp
+            warning('Checkpoint save failed at step %d (continuing run): %s', tn, MEcp.message);
+        end
+    end
+
     gapMinNow = diag.gapMin;
     if doPrintStep
         fprintf('   min gap after accepted step = %.6e m\n', gapMinNow);
